@@ -2,8 +2,10 @@
   "name": "guestbook",
   "version": "1.0.0",
   "description": "Node.js site Guestbook –application",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
