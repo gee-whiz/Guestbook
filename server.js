@@ -10,8 +10,8 @@ app.use(express.static(publicDir));
 // Serve the few HTML pages we have; everything else falls back to express.static.
 const pages = [
   { route: '/', file: 'index.html' },
-  { route: '/guestbook', file: 'guestbook.html' },
-  { route: '/new-message', file: 'new-message.html' },
+  { route: '/guestbook', file: 'guestbook/index.html' },
+  { route: '/new-message', file: 'new-message/index.html' },
 ];
 
 pages.forEach(({ route, file }) => {
