@@ -52,7 +52,7 @@
       async function loadGuestbook() {
         const rows = document.getElementById('guestbookRows');
         try {
-          const response = await fetch('../data/guestbook.json');
+          const response = await fetch('/api/guestbook');
           if (!response.ok) {
             throw new Error('Failed to load guestbook data');
           }

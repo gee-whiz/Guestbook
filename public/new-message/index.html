@@ -89,7 +89,7 @@
         });
       });
 
-      form.addEventListener('submit', (event) => {
+      form.addEventListener('submit', async (event) => {
         event.preventDefault();
         let hasErrors = false;
 
@@ -107,9 +107,35 @@
           return;
         }
 
-        setStatus('Looks good! We will wire this up soon.', 'success');
-        form.reset();
-        inputs.forEach((input) => input.classList.remove('is-invalid'));
+        const payload = {
+          username: inputs[0].value.trim(),
+          country: inputs[1].value.trim(),
+          message: inputs[2].value.trim(),
+        };
+
+        try {
+          setStatus('Sending your message…', 'info');
+          const response = await fetch('/api/guestbook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(data.error || 'Unable to send your message.');
+          }
+
+          setStatus('Message posted! Redirecting to the guestbook…', 'success');
+          form.reset();
+          inputs.forEach((input) => input.classList.remove('is-invalid'));
+          setTimeout(() => {
+            window.location.href = '../guestbook/';
+          }, 1200);
+        } catch (error) {
+          console.error(error);
+          setStatus(error.message || 'Unable to send your message. Please try again later.', 'danger');
+        }
       });
     </script>
   </body>
