@@ -52,7 +52,8 @@
       async function loadGuestbook() {
         const rows = document.getElementById('guestbookRows');
         try {
-          const response = await fetch('/api/guestbook');
+          // Use the static JSON file so it works on GitHub Pages.
+          const response = await fetch('../data/guestbook.json');
           if (!response.ok) {
             throw new Error('Failed to load guestbook data');
           }
