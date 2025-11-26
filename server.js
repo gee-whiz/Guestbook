@@ -5,12 +5,36 @@ const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const basePathFromEnv = (process.env.BASE_PATH || '').replace(/\/+$/, '').replace(/^\/+/, '');
+const BASE_PATH = basePathFromEnv ? `/${basePathFromEnv}` : '';
 const publicDir = path.join(__dirname, 'public');
 const guestbookPath = path.join(publicDir, 'data', 'guestbook.json');
 
 app.use(express.json());
 
-app.use(express.static(publicDir));
+app.use((req, res, next) => {
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  const requestOrigin = req.headers.origin;
+  if (!allowedOrigins.length || (requestOrigin && allowedOrigins.includes(requestOrigin))) {
+    res.setHeader('Access-Control-Allow-Origin', allowedOrigins.length ? requestOrigin : '*');
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
+// Support running the app under a sub-path (e.g., GitHub Pages style).
+app.use(BASE_PATH || '/', express.static(publicDir));
 
 // Serve the few HTML pages we have; everything else falls back to express.static.
 const pages = [
@@ -20,7 +44,7 @@ const pages = [
 ];
 
 pages.forEach(({ route, file }) => {
-  app.get(route, (_req, res) => res.sendFile(path.join(publicDir, file)));
+  app.get(`${BASE_PATH}${route}`, (_req, res) => res.sendFile(path.join(publicDir, file)));
 });
 
 async function readGuestbook() {
@@ -36,10 +60,11 @@ async function readGuestbook() {
 }
 
 async function writeGuestbook(entries) {
+  await fs.mkdir(path.dirname(guestbookPath), { recursive: true });
   await fs.writeFile(guestbookPath, JSON.stringify(entries, null, 2));
 }
 
-app.get('/api/guestbook', async (_req, res) => {
+app.get(`${BASE_PATH}/api/guestbook`, async (_req, res) => {
   try {
     const entries = await readGuestbook();
     res.json(entries);
@@ -49,7 +74,7 @@ app.get('/api/guestbook', async (_req, res) => {
   }
 });
 
-app.post('/api/guestbook', async (req, res) => {
+app.post(`${BASE_PATH}/api/guestbook`, async (req, res) => {
   const { username = '', country = '', message = '' } = req.body || {};
   const cleaned = {
     username: username.trim(),
@@ -78,5 +103,6 @@ app.post('/api/guestbook', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Guestbook server listening on http://localhost:${PORT}`);
+  const pathInfo = BASE_PATH || '/';
+  console.log(`Guestbook server listening on http://localhost:${PORT}${pathInfo}`);
 });

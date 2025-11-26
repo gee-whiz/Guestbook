@@ -49,11 +49,20 @@
     </div>
 
     <script>
+      function detectBasePath() {
+        const segments = window.location.pathname.split('/').filter(Boolean);
+        if (window.location.hostname.includes('github.io') && segments.length) {
+          return `/${segments[0]}`;
+        }
+        return '';
+      }
+
       async function loadGuestbook() {
         const rows = document.getElementById('guestbookRows');
+        const basePath = detectBasePath();
         try {
-          // Use the static JSON file so it works on GitHub Pages.
-          const response = await fetch('../data/guestbook.json');
+          // Use the static JSON file so it works on GitHub Pages or any sub-path deployment.
+          const response = await fetch(`${basePath}/data/guestbook.json`);
           if (!response.ok) {
             throw new Error('Failed to load guestbook data');
           }
